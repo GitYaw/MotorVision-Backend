@@ -1,18 +1,27 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState, useEffect } from "react";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function CrashLogsScreen({ navigation }) {
-  const [crashLogs, setCrashLogs] = useState([
-    { id: '1', timestamp: 'Feb 12, 2025, 10:30 AM', details: 'Crash detected at 30 mph' },
-    { id: '2', timestamp: 'Feb 11, 2025, 3:15 PM', details: 'Minor impact detected' },
-  ]);
+  const [crashLogs, setCrashLogs] = useState([]);
+
+  useEffect(() => {
+    const loadLogs = async () => {
+      try {
+        const logs = await AsyncStorage.getItem("crashLogs");
+        setCrashLogs(logs ? JSON.parse(logs) : []);
+      } catch (error) {
+        console.error("Error loading logs:", error);
+      }
+    };
+
+    const focusListener = navigation.addListener("focus", loadLogs);
+    return focusListener;
+  }, [navigation]);
 
   return (
-    <LinearGradient
-      colors={['#121212', '#1E1E1E', '#292929']} // Gradient to match Figma design
-      style={styles.container}
-    >
+    <LinearGradient colors={["#121212", "#1E1E1E", "#292929"]} style={styles.container}>
       <Text style={styles.title}>Crash Reports</Text>
 
       <FlatList
@@ -21,7 +30,7 @@ export default function CrashLogsScreen({ navigation }) {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.logItem}
-            onPress={() => navigation.navigate('CrashDetail', { crash: item })}
+            onPress={() => navigation.navigate("CrashDetail", { crash: item })}
           >
             <Text style={styles.logText}>{item.timestamp}</Text>
             <Text style={styles.logDetails}>{item.details}</Text>
@@ -29,10 +38,7 @@ export default function CrashLogsScreen({ navigation }) {
         )}
       />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('CrashRecording')}
-      >
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("CrashRecording")}>
         <Text style={styles.buttonText}>Back to Recording</Text>
       </TouchableOpacity>
     </LinearGradient>
@@ -46,41 +52,41 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginBottom: 20,
   },
   logItem: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: "#1E1E1E",
     padding: 15,
     borderRadius: 12,
     marginBottom: 10,
-    shadowColor: '#00bfff',
+    shadowColor: "#00bfff",
     shadowOpacity: 0.4,
     shadowRadius: 5,
   },
   logText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   logDetails: {
     fontSize: 14,
-    color: '#bbb',
+    color: "#bbb",
   },
   button: {
     marginTop: 20,
-    backgroundColor: '#00bfff',
+    backgroundColor: "#00bfff",
     paddingVertical: 12,
     borderRadius: 30,
-    alignItems: 'center',
-    shadowColor: '#00bfff',
+    alignItems: "center",
+    shadowColor: "#00bfff",
     shadowOpacity: 0.5,
     shadowRadius: 10,
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
 });

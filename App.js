@@ -16,8 +16,8 @@ const CrashStack = createStackNavigator();
 function CrashStackNavigator() {
   return (
     <CrashStack.Navigator screenOptions={{ headerShown: false }}>
-      <CrashStack.Screen name="CrashLogs" component={CrashLogsScreen} />
       <CrashStack.Screen name="CrashRecording" component={CrashRecordingScreen} />
+      <CrashStack.Screen name="CrashLogs" component={CrashLogsScreen} />
       <CrashStack.Screen name="CrashDetail" component={CrashDetailScreen} />
     </CrashStack.Navigator>
   );
