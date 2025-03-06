@@ -92,9 +92,17 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   item: {
+    backgroundColor: '#1e1e1e',
+    borderRadius: 12,
     padding: 15,
     marginVertical: 5,
-    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#00bfff', // Border color to make the box pop
   },
   instructionsText: {
     fontSize: 18,

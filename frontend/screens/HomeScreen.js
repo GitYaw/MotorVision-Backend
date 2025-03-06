@@ -133,14 +133,35 @@ function RotatingImage() {
   return <RotatingImageComponent isRotating={isRotating} stopRotation={stopRotation} />;
 }
 
+const convertToDMS = (coordinate, type) => {
+  if (coordinate === null || coordinate === undefined) return '';
+  
+  const absolute = Math.abs(coordinate);
+  const degrees = Math.floor(absolute);
+  const minutesNotTruncated = (absolute - degrees) * 60;
+  const minutes = Math.floor(minutesNotTruncated);
+  const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(1);
+
+  let direction = '';
+  if (type === 'latitude') {
+    direction = coordinate >= 0 ? 'N' : 'S';
+  } else {
+    direction = coordinate >= 0 ? 'E' : 'W';
+  }
+
+  return `${degrees}°${minutes}'${seconds}"${direction}`;
+};
+
 // Location Component
 function LocationView() {
   const [location, setLocation] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const requestPermissionAndGetLocation = async () => {
+    let locationSubscription = null;
+
+    const requestPermissionAndTrackLocation = async () => {
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
         setError("Location permission denied");
@@ -149,23 +170,38 @@ function LocationView() {
       }
 
       try {
-        const position = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-
-        setLocation({
-          latitude: parseFloat(position.coords.latitude.toFixed(2)),
-          longitude: parseFloat(position.coords.longitude.toFixed(2)),
-          accuracy: position.coords.accuracy,
-        });
+        // Start watching the user's location
+        locationSubscription = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.BestForNavigation, // Highest accuracy
+            timeInterval: 5000, // Get location updates every 5 seconds
+            distanceInterval: 2, // Update when user moves 2 meters
+          },
+          (position) => {
+            setLocation({
+              latitude: parseFloat(position.coords.latitude.toFixed(2)), // More precision
+              longitude: parseFloat(position.coords.longitude.toFixed(2)),
+              accuracy: position.coords.accuracy,
+              altitude: position.coords.altitude, // Elevation data
+              speed: position.coords.speed, // Speed in meters/sec
+              heading: position.coords.heading, // Compass direction
+            });
+            setLoading(false);
+          }
+        );
       } catch (err) {
         setError(err.message);
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
-    requestPermissionAndGetLocation();
+    requestPermissionAndTrackLocation();
+
+    return () => {
+      if (locationSubscription) {
+        locationSubscription.remove(); // Stop tracking on unmount
+      }
+    };
   }, []);
 
   const requestLocationPermission = async () => {
@@ -176,29 +212,40 @@ function LocationView() {
   if (loading) return <ActivityIndicator size="large" color="blue" />;
   if (error) return <Text>Error: {error}</Text>;
 
+  const latitudeDMS = convertToDMS(location.latitude, 'latitude');
+  const longitudeDMS = convertToDMS(location.longitude, 'longitude');
+
   return (
-    <View style={styles.locationContainer}>
-      {loading && <ActivityIndicator size="large" />}
-      {error && <Text style={{ color: "red" }}>Error: {error}</Text>}
+    <View style={styles.container}>
       {location ? (
         <View>
-          <Text style={styles.bodyText}>🌍 {location.latitude}°, {location.longitude}°</Text>
+        <Text style={styles.bodyText}>
+          🌍 {latitudeDMS} {longitudeDMS}
+        </Text>
+          {/* <Text style={styles.bodyText}>🌍 Longitude: {location.longitude}°</Text> */}
+          {/* <Text style={styles.bodyText}>📏 Accuracy: {location.accuracy} meters</Text>
+          <Text style={styles.bodyText}>⛰️ Altitude: {location.altitude} meters</Text> */}
+          {/* <Text style={styles.bodyText}>🚀 Speed: {location.speed} m/s</Text> */}
+          {/* <Text style={styles.bodyText}>🧭 Heading: {location.heading}°</Text> */}
         </View>
       ) : (
-        !loading && <Text>No location data available.</Text>
+        <Text>No location data available.</Text>
       )}
     </View>
   );
 }
 
-export default function HomeScreen({navigation}) {
+// HomeScreen Component
+export default function HomeScreen({ navigation }) {
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.titleContainer}>
         <Text style={styles.titleText}>MotorVision</Text>
       </View>
       <View style={styles.stepContainer}></View>
+      
       <LocationView /> {/* Added Location Component */}
+      
       <View style={styles.helmetContainer}>
         <Text style={styles.connectText}>Connect to a Paired Device</Text>
       </View>
@@ -206,13 +253,13 @@ export default function HomeScreen({navigation}) {
         <RotatingImage />
       </View>
       <SmartHelmetButton />
-      <TouchableOpacity
-          style={styles.button}
-            onPress={() => navigation.navigate('ConnectDeviceScreen')}
-          >
-            <Text style={styles.buttonText}>Change Device</Text>
-      </TouchableOpacity>
 
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate('ConnectDeviceScreen')}
+      >
+        <Text style={styles.buttonText}>Change Device</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
