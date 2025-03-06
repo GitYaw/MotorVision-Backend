@@ -20,6 +20,8 @@ import React, { useEffect, useRef, useState } from "react";
 
 import axios from "axios";
 
+import * as Location from "expo-location";
+
 /* Smart Button -> connect this to a rest API (connect rest api)
 const SmartHelmetButton = () => {
   const [buttonText, setButtonText] = useState('Connect to SmartHelmet?');
@@ -137,44 +139,42 @@ function LocationView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // useEffect(() => {
-  //   const requestPermissionAndGetLocation = async () => {
-  //     const hasPermission = await requestLocationPermission();
-  //     if (!hasPermission) {
-  //       setError("Location permission denied");
-  //       setLoading(false);
-  //       return;
-  //     }
+  useEffect(() => {
+    const requestPermissionAndGetLocation = async () => {
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        setError("Location permission denied");
+        setLoading(false);
+        return;
+      }
 
-    //   Geolocation.getCurrentPosition(
-    //     (position) => {
-    //       setLocation({
-    //         latitude: parseFloat(position.coords.latitude.toFixed(2)),
-    //         longitude: parseFloat(position.coords.longitude.toFixed(2)),
-    //         accuracy: position.coords.accuracy,
-    //       });
-    //       setLoading(false);
-    //     },
-    //     (error) => {
-    //       setError(error.message);
-    //       setLoading(false);
-    //     },
-    //     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-    //   );
-    // };
+      try {
+        const position = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
 
-  //   requestPermissionAndGetLocation();
-  // }, []);
+        setLocation({
+          latitude: parseFloat(position.coords.latitude.toFixed(2)),
+          longitude: parseFloat(position.coords.longitude.toFixed(2)),
+          accuracy: position.coords.accuracy,
+        });
+      } catch (err) {
+        setError(err.message);
+      }
+
+      setLoading(false);
+    };
+
+    requestPermissionAndGetLocation();
+  }, []);
 
   const requestLocationPermission = async () => {
-    if (Platform.OS === "android") {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    }
-    return true; // iOS handles permissions in Info.plist
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    return status === "granted";
   };
+
+  if (loading) return <ActivityIndicator size="large" color="blue" />;
+  if (error) return <Text>Error: {error}</Text>;
 
   return (
     <View style={styles.locationContainer}>
@@ -218,13 +218,25 @@ export default function HomeScreen({navigation}) {
 }
 
 const styles = StyleSheet.create({
+  locationContainer: {
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+  },
+  bodyText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "white",
+  },
   application: {
     flex: 1,
     backgroundColor: "#F3F3F3",
   },
   titleContainer: {
     marginTop: 100,
-    marginBottom: 30,
+    marginBottom: 0,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
