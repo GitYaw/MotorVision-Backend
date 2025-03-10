@@ -1,4 +1,0 @@
-Django
-djangorestframework
-
-# pip install -r requirements.txt
