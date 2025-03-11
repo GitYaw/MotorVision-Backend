@@ -6,6 +6,11 @@ import time
 
 class BluetoothReaderSimulation:
 
+    '''
+    - connect_sim, start_sim, and stop_sim are the only acessible functions
+    - in the future: push start and stop to the DB, and then 
+    '''
+
     # initiailizes the reader object - this we would still have to make as versatiole
     def __init__(self,  filename="", port="/dev/rfcomm0", baud_rate=9600, timeout=1):
         """
@@ -70,9 +75,13 @@ class BluetoothReaderSimulation:
             print("Need to disconnect first. Please click stop recording")
             return
         
-        print("Processing ride statistics... ")
-        self.ride_statistics["speed"] = self.ride_statistics["speed"]/len(self.data)
-        print(self.ride_statistics)
+        if len(self.data) == 0:
+            print("No statistics calculated for ride")
+            self.ride_statistics["speed"] = 0
+        else:
+            print("Processing ride statistics... ")
+            self.ride_statistics["speed"] = self.ride_statistics["speed"]/len(self.data)
+            print(self.ride_statistics)
 
     # realisitically, this would be actually calling the serial connection
     def read_data_sim(self): # TODO
@@ -126,7 +135,11 @@ class BluetoothReaderSimulation:
             print("Need to disconnect first. Please click stop recording")
             return
         
-        print("Uploading final buffer to cloud...")
+        if len(self.data) == 0:
+            print("No buffer filled for ride.")
+            return
+        else:
+            print("Uploading final buffer to cloud...")
 
     def start_sim(self):
         """
@@ -137,10 +150,15 @@ class BluetoothReaderSimulation:
             - Instead of reading data on a seperate thread, we are calling it in the start function
 
         """
+        
         self.running = True
-        if self.running:
+        if self.serial_connection and self.running:
             print("Bluetooth reader thread starting....")
             self.read_data_sim()
+        else:
+            print("Please connect to device first.")
+            return
+    
 
     def stop_sim(self):
         """
@@ -152,6 +170,7 @@ class BluetoothReaderSimulation:
                 most recent buffer. If ride <= 15 min, then this is a
                 partially filled buffer. If ride > 15 min, then the 
                 sliding window functionality will have been implenented.
+            - Returns: a dictionary with keys crash_report and summary
 
         """
         print()
@@ -167,21 +186,8 @@ class BluetoothReaderSimulation:
         self.process_ride_statistics() # user statistics
 
         print("Completed data processing.")
-
-
-        """
-        - database processing: go through each line 
-        - extract the first 6 values of each row
-        - go through each row 
-
-        Statistics:
-        - average distance (per trip)
-        - total distance (across all trips)
-        - average speed
-
-        Crash Report:
-
-        """
+        
+        return {"crash_report": self.buffer, "summary": self.ride_statistics}
 
 if __name__ == "__main__":
 

@@ -56,10 +56,10 @@ def connect(request):
 @api_view(['GET'])
 def start(request):
     bt_reader_sim.start_sim()
-    return Response({"message": "Start pressed -> read data has began"})
+    return Response({"message": "Bluetooth recording has started."})
 
 # TODO: change to add return and more
 @api_view(['GET'])
 def stop(request):
-    bt_reader_sim.stop_sim()
-    return Response({"message:": "Stopped bluetooth simulation"})
+    res = bt_reader_sim.stop_sim()
+    return Response(res)
