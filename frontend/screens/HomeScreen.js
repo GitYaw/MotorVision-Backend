@@ -159,29 +159,31 @@ function LocationView() {
 
 
   //directly from expo go documentation https://docs.expo.dev/versions/latest/sdk/accelerometer/
-  const [{ x, y, z }, setData] = useState({
-    x: 0,
-    y: 0,
-    z: 0,
-  });
+  const [{ x, y, z }, setData] = useState({ x: 0, y: 0, z: 0 });
   const [subscription, setSubscription] = useState(null);
-
-  const _slow = () => Accelerometer.setUpdateInterval(1000);
-  const _fast = () => Accelerometer.setUpdateInterval(1000);
-
+  
+  // Slow update interval (e.g., 3000ms = 3 seconds)
+  const _slow = () => Accelerometer.setUpdateInterval(3000);
+  
+  // Subscribe to accelerometer updates
   const _subscribe = () => {
+    Accelerometer.setUpdateInterval(3000); // Ensure slow updates
     setSubscription(Accelerometer.addListener(setData));
   };
-
+  
+  // Unsubscribe when component unmounts
   const _unsubscribe = () => {
-    subscription && subscription.remove();
-    setSubscription(null);
+    if (subscription) {
+      subscription.remove();
+      setSubscription(null);
+    }
   };
-
+  
   useEffect(() => {
     _subscribe();
     return () => _unsubscribe();
   }, []);
+  
 
 
   //this
