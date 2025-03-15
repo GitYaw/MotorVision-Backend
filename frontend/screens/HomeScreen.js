@@ -205,7 +205,7 @@ function LocationView() {
         // Start watching the user's location
         locationSubscription = await Location.watchPositionAsync(
           {
-            accuracy: Location.Accuracy.High, // Highest accuracy
+            accuracy: Location.Accuracy.BestForNavigation, // Highest accuracy
             timeInterval: 5000, // Get location updates every 5 seconds
             distanceInterval: 0, // Update when user moves 2 meters
           },
