@@ -9,5 +9,6 @@ numpy
 selenium
 
 gunicorn
+Pillow
 
 # pip install -r requirements.txt
